@@ -7,6 +7,8 @@ This technical challenge evaluates your practical skills in Linux systems, conta
 **Time Allocation**: 4-8 hours (take-home)  
 **Deliverable**: Working implementation + technical presentation
 
+**Note**: This challenge is comprehensive by design. We understand you may not complete every task, and that's perfectly acceptable. We're more interested in your problem-solving approach, technical decisions, and how you navigate challenges than achieving full completion. Focus on demonstrating your thought process and documenting your journey.
+
 ---
 
 ## Environment Setup
@@ -132,9 +134,10 @@ Prepare a 30-45 minute technical presentation covering:
 
 Create a GitHub repository containing:
 - All source code and configurations
-- `RESULTS.md` with detailed findings
+- `RESULTS.md` with detailed findings and your approach
 - Scan outputs and SBOMs
 - Clear documentation for reproducing your work
+- **Document blockers, challenges, and incomplete items** - we want to understand your problem-solving process
 
 Submit your repository link to your Chainguard contact.
 
@@ -143,11 +146,12 @@ Submit your repository link to your Chainguard contact.
 ## Evaluation Criteria
 
 Your submission will be assessed on:
-- Technical execution and completeness
+- Problem-solving approach and technical reasoning
 - Security awareness and analysis depth
-- Problem-solving approach
+- Quality of work completed (over quantity)
 - Code quality and documentation
 - Communication and presentation skills
+- Ability to articulate challenges and tradeoffs
 
 ---
 
