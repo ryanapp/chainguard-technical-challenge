@@ -15,15 +15,15 @@ This technical challenge evaluates your practical skills in Linux systems, conta
 
 Spin up a Linux virtual machine using your preferred virtualization platform. Within this VM:
 
-- Install a container engine
-- Deploy a local Kubernetes cluster
-- Deploy a local container registry
+- Install a container engine of your choice
+- Deploy a local Kubernetes cluster of your choice
+- Deploy a local container registry of your choice
 
 Document your tool choices and reasoning.
 
 ---
 
-## Part 1: Container Security Fundamentals
+## Container Security Fundamentals
 
 Work with the Go application from the Chainguard demo repository:
 
@@ -45,7 +45,7 @@ cd hello-melange-apko/go
 - Compare results between both approaches
 
 **3. Remediation**
-- Patch the Go application dependencies
+- Patch the Go application (and its dependencies)
 - Update or optimize base images as needed
 - Rescan and document improvements
 
@@ -68,40 +68,6 @@ cd hello-melange-apko/go
 
 ---
 
-## Part 2: Advanced Builds with Wolfi
-
-Rebuild the same Go application using Wolfi and Chainguard tooling.
-
-### Requirements
-
-**1. Create Three Container Variants**
-- Wolfi-base multi-stage Dockerfile using `cgr.dev/chainguard/wolfi-base`
-- Apko + Melange build with shell
-- Apko + Melange build without shell (distroless)
-
-**2. Comparative Analysis**
-
-Analyze and compare all containers across:
-- Image size
-- CVE count and severity
-- SBOM composition
-- Attack surface
-- Runtime performance
-- Operational considerations
-
-**3. Deployment**
-- Deploy one Wolfi-based variant as standalone container
-- Deploy to Kubernetes
-- Validate functionality
-
-### Deliverables
-- All build configurations (Dockerfiles, apko.yaml, melange.yaml)
-- Comprehensive comparison document
-- Deployment manifests
-- Analysis and recommendations
-
----
-
 ## Presentation & Interview
 
 Prepare a 30-45 minute technical presentation covering:
@@ -110,17 +76,11 @@ Prepare a 30-45 minute technical presentation covering:
 - Setup decisions and rationale
 - Tool selection justification
 
-**Part 1 Deep Dive (10-15 min)**
+**Deep Dive (10-15 min)**
 - Dockerfile design choices
 - Security findings and remediation approach
 - SBOM insights
 - Production challenges for traditional container builds
-
-**Part 2 Deep Dive (10-15 min)**
-- Wolfi-based build approaches
-- Build process differences
-- Distroless philosophy and tradeoffs
-- Comparative analysis results
 
 **Q&A (5-10 min)**
 - Security best practices
@@ -128,31 +88,18 @@ Prepare a 30-45 minute technical presentation covering:
 - Kubernetes security
 - Operational challenges
 
----
-
-## Submission
-
-Create a GitHub repository containing:
-- All source code and configurations
-- `RESULTS.md` with detailed findings and your approach
-- Scan outputs and SBOMs
-- Clear documentation for reproducing your work
-- **Document blockers, challenges, and incomplete items** - we want to understand your problem-solving process
-
-Submit your repository link to your Chainguard contact.
-
----
+Prepare to walk live trough your setup, Dockerfiles as well as the results of your findings (the results can be presented using a slide deck).
 
 ## Evaluation Criteria
 
-Your submission will be assessed on:
+Your presentation will be assessed on:
 - Problem-solving approach and technical reasoning
 - Security awareness and analysis depth
 - Quality of work completed (over quantity)
-- Code quality and documentation
+- Code quality and documentation (where needed)
 - Communication and presentation skills
 - Ability to articulate challenges and tradeoffs
 
 ---
 
-Good luck.
+Good luck and may God have mercy on you! :-D 
