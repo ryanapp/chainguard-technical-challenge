@@ -7,7 +7,11 @@ This technical challenge evaluates your practical skills in Linux systems, conta
 **Time Allocation**: 4-8 hours (take-home)  
 **Deliverable**: Working implementation + technical presentation
 
-**Note**: This challenge is comprehensive by design. We understand you may not complete every task, and that's perfectly acceptable. We're more interested in your problem-solving approach, technical decisions, and how you navigate challenges than achieving full completion. Focus on demonstrating your thought process and documenting your journey.
+---
+
+> **⚠️ IMPORTANT NOTE**
+>
+> This challenge is comprehensive by design. We understand you may not complete every task, and that's perfectly acceptable. We're more interested in your problem-solving approach, technical decisions, and how you navigate challenges than achieving full completion. Focus on demonstrating your thought process and documenting your journey.
 
 ---
 
@@ -115,5 +119,3 @@ Your presentation will be assessed on:
 - Ability to articulate challenges and tradeoffs
 
 ---
-
-Good luck and may God have mercy on you! :-D
