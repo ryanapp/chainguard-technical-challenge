@@ -1,8 +1,9 @@
+```markdown
 # Chainguard Solutions Engineer Technical Challenge
 
 ## Overview
 
-This technical challenge evaluates your practical skills in Linux systems, containerization, Kubernetes, and secure software supply chain practices. You will containerize an application using multiple approaches, analyze security posture, and present your findings.
+This technical challenge evaluates your practical skills in Linux systems, containerization, and secure software supply chain practices. You will containerize an application using multiple approaches, analyze security posture, and present your findings.
 
 **Time Allocation**: 4-8 hours (take-home)  
 **Deliverable**: Working implementation + technical presentation
@@ -13,11 +14,20 @@ This technical challenge evaluates your practical skills in Linux systems, conta
 
 ## Environment Setup
 
-Spin up a Linux virtual machine using your preferred virtualization platform. Within this VM:
+**1. Spin up a Linux VM**
 
-- Install a container engine of your choice
-- Deploy a local Kubernetes cluster of your choice
-- Deploy a local container registry of your choice
+Spin up a Linux virtual machine using your preferred virtualization platform.
+
+**2. Install Container Engine**
+
+Within this VM, install a container engine of your choice.
+
+**3. Clone the Repository**
+
+```bash
+git clone https://github.com/maligin/chainguard-technical-challenge
+cd chainguard-technical-challenge
+```
 
 Document your tool choices and reasoning.
 
@@ -25,12 +35,9 @@ Document your tool choices and reasoning.
 
 ## Container Security Fundamentals
 
-Work with the Go application from the Chainguard demo repository:
+Work with the Go application located in the `/go` directory of this repository. See the [README.md](go/README.md) in that directory for build instructions.
 
-```bash
-git clone https://github.com/chainguard-dev/hello-melange-apko
-cd hello-melange-apko/go
-```
+**Important**: The application dependencies contain known CVEs. After your initial build and scan, you will need to patch the Go application and its dependencies to eliminate these vulnerabilities.
 
 ### Requirements
 
@@ -49,22 +56,32 @@ cd hello-melange-apko/go
 - Update or optimize base images as needed
 - Rescan and document improvements
 
-**4. Supply Chain Security**
-- Generate SBOM for each container
-- Sign all container images
-- Push signed images to your local registry
-
-**5. Deployment**
-- Deploy as a standalone container
-- Deploy to your Kubernetes cluster
-- Validate both deployments are functional
+**4. Deployment**
+- Run as a standalone container
+- Validate deployment is functional
 
 ### Deliverables
 - All Dockerfiles
 - Vulnerability scan reports (before/after)
-- SBOM files
-- Kubernetes manifests
 - Documentation of findings and methodology
+
+---
+
+## Bonus Tasks (Optional)
+
+If time permits, explore these advanced topics:
+
+**Supply Chain Security**
+- Generate SBOM for each container
+- Sign container images
+- Deploy a local container registry
+- Push signed images to your registry
+
+**Kubernetes Deployment**
+- Deploy a local Kubernetes cluster
+- Deploy the application to Kubernetes
+- Create Kubernetes manifests
+- Validate cluster deployment
 
 ---
 
@@ -79,16 +96,15 @@ Prepare a 30-45 minute technical presentation covering:
 **Deep Dive (10-15 min)**
 - Dockerfile design choices
 - Security findings and remediation approach
-- SBOM insights
 - Production challenges for traditional container builds
+- Bonus tasks (if completed)
 
 **Q&A (5-10 min)**
 - Security best practices
 - Supply chain considerations
-- Kubernetes security
 - Operational challenges
 
-Prepare to walk live trough your setup, Dockerfiles as well as the results of your findings (the results can be presented using a slide deck).
+Prepare to walk live through your setup, Dockerfiles, and results of your findings (results can be presented using a slide deck).
 
 ## Evaluation Criteria
 
@@ -101,5 +117,4 @@ Your presentation will be assessed on:
 - Ability to articulate challenges and tradeoffs
 
 ---
-
-Good luck and may God have mercy on you! :-D 
+```
