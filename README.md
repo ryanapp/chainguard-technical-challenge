@@ -1,4 +1,3 @@
-```markdown
 # Chainguard Solutions Engineer Technical Challenge
 
 ## Overview
@@ -14,16 +13,15 @@ This technical challenge evaluates your practical skills in Linux systems, conta
 
 ## Environment Setup
 
-**1. Spin up a Linux VM**
+### 1. Spin up a Linux VM
 
 Spin up a Linux virtual machine using your preferred virtualization platform.
 
-**2. Install Container Engine**
+### 2. Install Container Engine
 
 Within this VM, install a container engine of your choice.
 
-**3. Clone the Repository**
-
+### 3. Clone the Repository
 ```bash
 git clone https://github.com/maligin/chainguard-technical-challenge
 cd chainguard-technical-challenge
@@ -117,4 +115,5 @@ Your presentation will be assessed on:
 - Ability to articulate challenges and tradeoffs
 
 ---
-```
+
+Good luck and may God have mercy on you! :-D
