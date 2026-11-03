@@ -1,8 +1,8 @@
 # Scan evidence
 
-The `2026-11-03/` directory contains the complete supplied VM report set, including the console summary and captured build inputs. Trivy JSON reports are losslessly compressed to keep the repository smaller; no findings or metadata have been removed.
+The `2026-11-03/` directory contains the original supplied VM report set, including the console summary and captured build inputs. Its `arm64-base-verification/` subdirectory contains a separate follow-up that resolves the auxiliary base-scan architecture gap. Trivy JSON reports are losslessly compressed to keep the repository smaller; no findings or metadata have been removed.
 
-## Report index
+## Original report index
 
 | File | Scope | Reported platform | Findings |
 |---|---|---|---:|
@@ -17,13 +17,20 @@ The `2026-11-03/` directory contains the complete supplied VM report set, includ
 
 Also included: the original `summary.txt`, both Dockerfiles, `.dockerignore`, the human-readable `summary.md`, and `ORIGINAL_SHA256SUMS`.
 
-## Architecture caveat
+## ARM64 follow-up and historical architecture caveat
 
 The four application scans form an ARM64 before/after comparison. The two standalone base reports are AMD64 and must not be described as platform-matched validation of those application images.
 
 Equal totals do not establish identical package inventories. The original collector did not explicitly constrain the platform/source of standalone base scans; the recorded metadata establishes the mismatch, not its complete root cause.
 
-The current collector now sets the target platform, uses remote sources for base scans and local Docker sources for application scans, and validates report metadata. A future rerun should be stored separately rather than overwriting these originals.
+The [follow-up verification](2026-11-03/arm64-base-verification/README.md) explicitly selected ARM64 for both pinned base images. It used Trivy 0.76.1 and a cached database with the original `UpdatedAt` timestamp, and is retained separately from the original reports.
+
+| File in `2026-11-03/arm64-base-verification/` | Reported platform | Findings |
+|---|---|---:|
+| `base-golang-arm64.json.gz` | linux/arm64 | 3,186 OS; zero Go |
+| `base-distroless-arm64.json.gz` | linux/arm64 | 0 |
+
+Use these two reports for platform-matched base corroboration. The follow-up does not change the four application-image results or constitute a complete rebuild/test rerun. The current collector also explicitly selects image sources/platform and validates report metadata; the full revised collector has not been rerun.
 
 ## Read and verify the reports
 

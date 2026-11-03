@@ -12,7 +12,11 @@ The runtime keeps build-time tooling out of the application image. It does not p
 
 The uploaded evidence exposed a platform mismatch in the auxiliary base scans: `base-golang.json` and `base-distroless.json` identify AMD64, whereas all four application-image reports identify ARM64. Matching finding totals do not prove identical inventories; architecture-specific package names differ. Use the ARM64 application reports for the main comparison and do not present the standalone base files as platform-matched corroboration.
 
-The original reports are preserved unchanged. The collector now passes an explicit platform to builds and scans, chooses remote versus local image sources explicitly, and checks report architecture; those changes have not been rerun in the original VM.
+The original reports are preserved unchanged. A separate [ARM64 base verification](../reports/2026-11-03/arm64-base-verification/README.md), started at 2026-11-03T22:57:02Z in the same VM, explicitly selected `linux/arm64` and remote image sources. Both report architectures and pinned base references were checked. The results confirm 3,186 OS findings in the Go builder and zero in the Debian 13 runtime, without changing the main application results.
+
+That verification used Trivy 0.76.1 and the retained database with `UpdatedAt` 2026-11-03T13:13:42.304243913Z, matching the original summary. The uploaded metadata also records `DownloadedAt` 2026-11-03T18:03:15.465453448Z. Database checksums were captured for the follow-up; the original run did not capture a database checksum, so this is not retrospective byte-for-byte proof of database identity. The database binary itself is not included.
+
+The collector now passes an explicit platform to builds and scans, chooses remote versus local image sources explicitly, and checks report architecture. Only the two base scans were rerun in the follow-up; the revised complete collector, four application builds, source checks and smoke check were not rerun.
 
 ## Why this runtime
 
@@ -62,5 +66,7 @@ No controlled Chainguard alternative was measured. Supplier maintenance and supp
 ## Completed versus proposed
 
 Completed in the recorded VM run: four image builds and scans, source reachability checks, dependency remediation, image-size collection and the final standalone HTTP smoke check.
+
+Completed in the separate follow-up: two platform-matched ARM64 base scans with the original scanner version and matching cached database timestamp. The original AMD64 base reports remain historical evidence, not the selected corroborating base scans.
 
 Not completed: comprehensive regression testing, signature or attestation verification, application signing, Kubernetes deployment or publication of an OpenVEX statement. The presentation is shared separately, and the complete uploaded reports are available with provenance and decompression instructions in [the evidence guide](../reports/README.md).

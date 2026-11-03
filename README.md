@@ -13,9 +13,9 @@ The Linux ARM64 VM run on 3 November 2026 used Go 1.26.10, Trivy 0.76.1 and govu
 
 govulncheck reported 11 reachable findings before and zero after, with one required-module-only finding remaining. The final multi-stage container returned `Hello World!`; that is a smoke check, not comprehensive testing or proof of zero risk.
 
-See the [recorded results and severity breakdown](reports/2026-11-03/summary.md) and the [complete uploaded evidence](reports/README.md). The six raw Trivy JSON files are stored losslessly compressed, alongside both govulncheck reports, the original console summary, captured Dockerfiles and original-file checksums.
+See the [recorded results and severity breakdown](reports/2026-11-03/summary.md) and the [complete uploaded evidence](reports/README.md). Eight raw Trivy JSON files are stored losslessly compressed: the original six reports and two follow-up ARM64 base scans. Both govulncheck reports, the original console summary, captured Dockerfiles and original-file checksums are also included.
 
-**Evidence caveat:** all four application-image reports are ARM64, but the two standalone base-image reports identify AMD64. Their totals match, but they are not a platform-matched base comparison. The core before/after results come directly from the four ARM64 application reports; the current collector explicitly selects and checks the platform for future runs.
+**Architecture verification:** all four application-image reports are ARM64. The original two standalone base scans were AMD64 and are preserved as historical evidence. A [separate ARM64 verification](reports/2026-11-03/arm64-base-verification/README.md), started at 22:57:02 UTC on 3 November, used the same pinned base references, Trivy 0.76.1 and a cached database with the original `UpdatedAt` timestamp. It confirms 3,186 OS findings in the builder and zero in the runtime; the headline results are unchanged. These follow-up scans provide platform-matched corroboration, not a new full application build or test run.
 
 ## Repository contents
 
@@ -84,4 +84,4 @@ For standalone use of `scan.sh`, first set `GOVULNDB_URL` to a separately retain
 git diff 42fd9eb228ff400c504dfe985dcee97de323ace7 HEAD -- go/go.mod go/go.sum
 ```
 
-This is one solution commit following the preserved upstream history, not a fabricated sequence of intermediate remediation commits. The final dependency choices are explicit and should be reviewed again before any production use.
+The initial solution commit and subsequent evidence/documentation commits follow the preserved upstream history; they are not a fabricated sequence of intermediate remediation steps. The final dependency choices are explicit and should be reviewed again before any production use.

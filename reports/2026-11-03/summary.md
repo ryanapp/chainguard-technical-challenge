@@ -2,20 +2,24 @@
 
 This is the selected presentation evidence from the VM run supplied on 3 November 2026. It supersedes the earlier Debian 12 runtime comparison; the uploaded raw reports are now committed alongside this summary, with JSON files stored as lossless `.json.gz` files.
 
-## Raw-report verification and caveat
+## Raw-report verification and architecture follow-up
 
 The uploaded totals, severities, residual advisory and captured Dockerfiles match the recorded summary. All four application-image reports identify `linux/arm64`; the two standalone base-image reports identify `linux/amd64`. Those auxiliary files are not a platform-matched base comparison, even though their totals match the OS targets of the application scans.
 
 The principal before/after results below come directly from the ARM64 application reports and remain valid. Architecture-specific package names differ between the standalone builder report and the single-stage application report; do not infer identical inventories from equal totals.
 
-The original files are preserved byte-for-byte after decompression. See `../README.md` for the report index and checksum instructions; the collector has been corrected for future runs, not used to replace this historical evidence.
+The original files are preserved byte-for-byte after decompression. See [the evidence guide](../README.md) for the report index and checksum instructions; the collector has been corrected for future runs, not used to replace this historical evidence.
+
+A separate [ARM64 base verification](arm64-base-verification/README.md), started at 2026-11-03T22:57:02Z, closes the supporting-evidence architecture gap. Both new reports identify `linux/arm64`, use the same pinned base references and confirm 3,186 OS findings in the builder and zero in the runtime. Trivy 0.76.1 and the cached database's `UpdatedAt` match the original run. No full application rebuild, source scan or smoke check was repeated, and the headline results below are unchanged.
+
+The follow-up records database checksums, but the original run did not capture one; matching metadata is not retrospective cryptographic proof of database identity. The new reports supplement, rather than overwrite, the original AMD64 base scans.
 
 ## Fixed inputs
 
 - **Source baseline:** `42fd9eb228ff400c504dfe985dcee97de323ace7`.
 - **Builder, both layouts and states:** `golang:1.26.10-bookworm@sha256:23ce71337b726608afb1bc00986e630a05034a87a87ea1fc2cd1ae5cf33387eb`.
 - **Multi-stage runtime, both states:** `gcr.io/distroless/static-debian13:nonroot@sha256:25ac8f0c3b2334a9eb05452266bd4697864a8c8ef0ef71e5e6480d7f92868329`.
-- **Compiler/platform:** Go 1.26.10, linux/arm64 for the VM/source checks and all four application images; auxiliary standalone base reports are linux/amd64.
+- **Compiler/platform:** Go 1.26.10, linux/arm64 for the VM/source checks and all four application images; original auxiliary base reports are linux/amd64, with separate linux/arm64 base verification now included.
 - **Tools:** Trivy 0.76.1; govulncheck v1.9.0; Docker 29.9.2.
 - **Trivy DB:** `2026-11-03T13:13:42.304243913Z`.
 - **Go DB:** `2026-11-02T22:01:43Z`.
@@ -30,7 +34,7 @@ The original files are preserved byte-for-byte after decompression. See `../READ
 | single-after | 3,186 | 1 | 3,187 | 4 | 1.75 GB |
 | multi-after | 0 | 1 | 1 | 1 | 17.6 MB |
 
-The Go base alone reports 3,186 OS findings, 3 fixable. The Debian 13 distroless base alone reports zero.
+The platform-matched follow-up confirms that the Go base alone reports 3,186 OS findings, 3 fixable, and the Debian 13 distroless base alone reports zero. The historical AMD64 base scans reported the same totals.
 
 | Image | Critical | High | Medium | Low | Unknown |
 |---|---:|---:|---:|---:|---:|

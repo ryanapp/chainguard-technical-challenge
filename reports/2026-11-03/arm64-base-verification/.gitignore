@@ -1,0 +1,3 @@
+# Keep decompressed reports local; retain the uploaded metadata JSON.
+/base-*.json
+!trivy-db-metadata.json
