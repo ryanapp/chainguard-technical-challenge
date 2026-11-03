@@ -1,0 +1,245 @@
+#cloud-config
+# ---------------------------------------------------------------------------
+# Chainguard technical challenge: Multipass VM setup (pinned)
+#
+# Launch (from your Mac):
+#   multipass launch 24.04 --name cg --cpus 4 --memory 8G --disk 30G \
+#     --cloud-init cg-cloud-init.yaml --timeout 900
+#
+# Check progress / result:
+#   multipass exec cg -- cloud-init status --wait
+#   multipass exec cg -- cat /var/log/cg-versions.txt
+#   multipass exec cg -- tail -50 /var/log/cg-setup.log    # if anything failed
+#
+# Pinning policy
+#   - Every tool is pinned to an exact version.
+#   - Every downloaded binary is checked against a SHA-256 hash written into
+#     this file. If a download doesn't match, setup stops.
+#   - Docker comes from Docker's signed apt repository at exact versions.
+#     The repository key's fingerprint is checked before the key is trusted.
+#   - govulncheck is installed with `go install` at an exact version. Go checks
+#     the module against its public checksum database (sum.golang.org).
+#   - Not pinned on purpose: Ubuntu's own packages (they come with security
+#     updates) and the scanners' vulnerability databases (that data is meant
+#     to be current). Record their dates instead. See the runbook.
+#
+# Versions and hashes collected 2026-11-01. To upgrade a tool, change its
+# version AND both hashes, taken from that release's published checksums.
+# ---------------------------------------------------------------------------
+
+package_update: true
+package_upgrade: false
+packages:
+  - ca-certificates
+  - curl
+  - git
+  - gnupg
+  - jq
+  - make
+
+write_files:
+  # On first boot, unattended-upgrades often holds the apt lock. Make every
+  # apt call wait for it instead of failing.
+  - path: /etc/apt/apt.conf.d/99-lock-timeout
+    permissions: "0644"
+    content: |
+      DPkg::Lock::Timeout "600";
+
+  # Go on PATH for every login shell (multipass shell uses a login shell)
+  - path: /etc/profile.d/go.sh
+    permissions: "0644"
+    content: |
+      export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+
+  - path: /usr/local/sbin/cg-setup.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      # The *_SHA256_* variables are read indirectly by sha_for(). ShellCheck
+      # can't follow that, so its "unused variable" warning is disabled.
+      # shellcheck disable=SC2034
+      set -euo pipefail
+      exec > >(tee -a /var/log/cg-setup.log) 2>&1
+
+      # ======================= PINNED VERSIONS ===========================
+      GO_VERSION="1.26.10"
+      GO_SHA256_arm64="3f4227ce7b206a513e794f1393adb473a07b46e94d18bd15d1c684bbb7319797"
+      GO_SHA256_amd64="ccfe7ae822d2c2f41f4fe7c956199967a4dac22d0ee0d2b2bfdb440aab3b20c5"
+
+      # golang.org/x/vuln, verified via sum.golang.org
+      GOVULNCHECK_VERSION="v1.9.0"
+
+      TRIVY_VERSION="0.76.1"
+      TRIVY_SHA256_arm64="e174dff2a6dba5e3ae41f8d0537a6324405bd08132497340304c6b20e0f16a1f"
+      TRIVY_SHA256_amd64="c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0"
+
+      SYFT_VERSION="1.55.0"
+      SYFT_SHA256_arm64="929bd163db2d7cd2255d3bcb8967208079813d7b46b0c952f7b794d8e2c7d304"
+      SYFT_SHA256_amd64="bb65249542db5fedeeb4d3f9b018b75e7264dbfbbb10486f044581a92f90490d"
+
+      COSIGN_VERSION="3.1.4"
+      COSIGN_SHA256_arm64="ade83b7aac62e131cacfe96d958948b2150cc9efec46a570a2649b8e27dedad2"
+      COSIGN_SHA256_amd64="424e2c97d0b45fd7a6b608a87f090f35633f4c23ece5f092d48bba11aaf4bbfa"
+
+      KIND_VERSION="0.33.0"
+      KIND_SHA256_arm64="20022bee6cfcd5086cb7234d218e3454e6090022f2a8f55d1fa7fcf42c3867a2"
+      KIND_SHA256_amd64="aee6151561422756b764a4ae28e7f44cda5af5a9eead3cc9985112b1de8d8e0d"
+
+      KUBECTL_VERSION="1.37.2"
+      KUBECTL_SHA256_arm64="fcc16f63186659d9722014b7e02d5fdd2d4e669cb8c0ab66365d7d3b8ba03509"
+      KUBECTL_SHA256_amd64="c04487523e7aa7d1493f7808174c899db93d7a9cf57531420cd76b9bd415f8f4"
+
+      DOCKER_GPG_FINGERPRINT="9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
+      DOCKER_CE_VERSION="5:29.9.2-1~ubuntu.24.04~noble"
+      CONTAINERD_VERSION="2.4.2-3~ubuntu.24.04~noble"
+      BUILDX_VERSION="0.38.1-1~ubuntu.24.04~noble"
+
+      CHALLENGE_REPO="https://github.com/maligin/chainguard-technical-challenge"
+      # HEAD on 2026-11-01
+      CHALLENGE_COMMIT="42fd9eb228ff400c504dfe985dcee97de323ace7"
+      # ===================================================================
+
+      GH="https://github.com"
+      ARCH="$(dpkg --print-architecture)"
+      case "${ARCH}" in
+        arm64|amd64) ;;
+        *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;;
+      esac
+      USER_NAME="ubuntu"
+      USER_HOME="/home/${USER_NAME}"
+
+      # sha_for NAME -> the pinned hash for this architecture
+      sha_for() { local v="${1}_SHA256_${ARCH}"; echo "${!v}"; }
+
+      # fetch URL DEST SHA256 -> download; stop setup if the hash doesn't match
+      fetch() {
+        curl -fsSL -o "$2" "$1"
+        echo "$3  $2" | sha256sum -c --strict -
+      }
+
+      echo "==> cg-setup starting (arch: ${ARCH})"
+
+      # ---- Docker (signed apt repo, key fingerprint checked) -------------
+      echo "==> Docker"
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /tmp/docker.asc
+      FPR="$(gpg --show-keys --with-colons /tmp/docker.asc \
+        | awk -F: '/^fpr/{print $10; exit}')"
+      if [ "${FPR}" != "${DOCKER_GPG_FINGERPRINT}" ]; then
+        echo "Docker GPG key fingerprint mismatch: ${FPR}"; exit 1
+      fi
+      install -m 0644 /tmp/docker.asc /etc/apt/keyrings/docker.asc
+      # shellcheck source=/dev/null
+      CODENAME="$(. /etc/os-release && echo "${VERSION_CODENAME}")"
+      DOCKER_REPO="https://download.docker.com/linux/ubuntu"
+      KEYRING="/etc/apt/keyrings/docker.asc"
+      echo "deb [arch=${ARCH} signed-by=${KEYRING}] ${DOCKER_REPO} ${CODENAME} stable" \
+        > /etc/apt/sources.list.d/docker.list
+      apt-get update -q
+      apt-get install -y -q \
+        "docker-ce=${DOCKER_CE_VERSION}" \
+        "docker-ce-cli=${DOCKER_CE_VERSION}" \
+        "containerd.io=${CONTAINERD_VERSION}" \
+        "docker-buildx-plugin=${BUILDX_VERSION}"
+      apt-mark hold docker-ce docker-ce-cli containerd.io docker-buildx-plugin
+      usermod -aG docker "${USER_NAME}"
+      systemctl enable --now docker
+
+      # ---- Go ------------------------------------------------------------
+      echo "==> Go ${GO_VERSION}"
+      fetch "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" \
+        /tmp/go.tgz "$(sha_for GO)"
+      rm -rf /usr/local/go
+      tar -C /usr/local -xzf /tmp/go.tgz
+
+      # ---- govulncheck ---------------------------------------------------
+      echo "==> govulncheck ${GOVULNCHECK_VERSION}"
+      export HOME=/root GOPATH=/root/go GOCACHE=/root/.cache/go-build
+      export GOTOOLCHAIN=local
+      GOBIN=/usr/local/bin /usr/local/go/bin/go install \
+        "golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION}"
+
+      # ---- Trivy ---------------------------------------------------------
+      echo "==> Trivy ${TRIVY_VERSION}"
+      case "${ARCH}" in arm64) T_ARCH="ARM64" ;; amd64) T_ARCH="64bit" ;; esac
+      TRIVY_URL="${GH}/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}"
+      fetch "${TRIVY_URL}/trivy_${TRIVY_VERSION}_Linux-${T_ARCH}.tar.gz" \
+        /tmp/trivy.tgz "$(sha_for TRIVY)"
+      tar -C /usr/local/bin -xzf /tmp/trivy.tgz trivy
+
+      # ---- Syft ----------------------------------------------------------
+      echo "==> Syft ${SYFT_VERSION}"
+      SYFT_URL="${GH}/anchore/syft/releases/download/v${SYFT_VERSION}"
+      fetch "${SYFT_URL}/syft_${SYFT_VERSION}_linux_${ARCH}.tar.gz" \
+        /tmp/syft.tgz "$(sha_for SYFT)"
+      tar -C /usr/local/bin -xzf /tmp/syft.tgz syft
+
+      # ---- cosign --------------------------------------------------------
+      echo "==> cosign ${COSIGN_VERSION}"
+      COSIGN_URL="${GH}/sigstore/cosign/releases/download/v${COSIGN_VERSION}"
+      fetch "${COSIGN_URL}/cosign-linux-${ARCH}" \
+        /usr/local/bin/cosign "$(sha_for COSIGN)"
+      chmod +x /usr/local/bin/cosign
+
+      # ---- kind ----------------------------------------------------------
+      echo "==> kind ${KIND_VERSION}"
+      KIND_URL="${GH}/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}"
+      fetch "${KIND_URL}/kind-linux-${ARCH}" \
+        /usr/local/bin/kind "$(sha_for KIND)"
+      chmod +x /usr/local/bin/kind
+
+      # ---- kubectl -------------------------------------------------------
+      echo "==> kubectl ${KUBECTL_VERSION}"
+      fetch "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl" \
+        /usr/local/bin/kubectl "$(sha_for KUBECTL)"
+      chmod +x /usr/local/bin/kubectl
+
+      rm -f /tmp/go.tgz /tmp/trivy.tgz /tmp/syft.tgz /tmp/docker.asc
+
+      # ---- Challenge repo ------------------------------------------------
+      # Every git command runs as the ubuntu user. The repo belongs to ubuntu,
+      # and git refuses to work in a repo owned by someone else when run as
+      # root ("dubious ownership").
+      echo "==> Cloning challenge repo"
+      REPO_DIR="${USER_HOME}/chainguard-technical-challenge"
+      ugit() { sudo -u "${USER_NAME}" -H git "$@"; }
+      if [ ! -d "${REPO_DIR}" ]; then
+        ugit clone "${CHALLENGE_REPO}" "${REPO_DIR}"
+      fi
+      REPO_HEAD="$(ugit -C "${REPO_DIR}" rev-parse HEAD)"
+      echo "challenge repo commit: ${REPO_HEAD}"
+      if [ "${REPO_HEAD}" != "${CHALLENGE_COMMIT}" ]; then
+        # Warn rather than fail: the upstream repo may have changed on purpose.
+        echo "WARNING: challenge repo HEAD is ${REPO_HEAD}"
+        echo "         but the pinned commit is ${CHALLENGE_COMMIT}."
+        echo "         Review: git -C ${REPO_DIR} log ${CHALLENGE_COMMIT}..HEAD"
+      fi
+
+      # ---- Record exactly what was installed -----------------------------
+      {
+        echo "cg-setup completed: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "arch:           ${ARCH}"
+        # shellcheck source=/dev/null
+        echo "os:             $(. /etc/os-release && echo "${PRETTY_NAME}")"
+        echo "kernel:         $(uname -r)"
+        echo "docker:         $(docker --version)"
+        echo "go:             $(/usr/local/go/bin/go version)"
+        echo "govulncheck:    ${GOVULNCHECK_VERSION}"
+        echo "trivy:          $(trivy --version | head -1)"
+        echo "syft:           ${SYFT_VERSION}"
+        echo "cosign:         ${COSIGN_VERSION}"
+        echo "kind:           $(kind version)"
+        echo "kubectl:        ${KUBECTL_VERSION}"
+        echo "challenge repo: ${REPO_HEAD} (pinned: ${CHALLENGE_COMMIT})"
+      } > /var/log/cg-versions.txt
+      chmod 644 /var/log/cg-versions.txt
+
+      echo "==> cg-setup finished"
+      cat /var/log/cg-versions.txt
+
+runcmd:
+  - [bash, /usr/local/sbin/cg-setup.sh]
+
+final_message: >-
+  cg VM ready after $UPTIME seconds.
+  Versions: /var/log/cg-versions.txt

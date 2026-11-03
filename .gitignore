@@ -5,3 +5,18 @@
 sbom_scanner_results/
 scanner_results/
 syft-sboms/
+
+# Local build outputs and transient evidence
+/go/hello-server
+/go/hello-server-*
+/reports/runs/
+/vulndb/
+*.tar
+*.tar.gz
+
+# Credentials and workstation state
+.env
+.env.*
+*.key
+*.pem
+.DS_Store
