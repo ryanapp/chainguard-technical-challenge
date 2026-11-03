@@ -1,0 +1,22 @@
+FROM golang:1.26.10-bookworm@sha256:23ce71337b726608afb1bc00986e630a05034a87a87ea1fc2cd1ae5cf33387eb AS builder
+
+ENV GOTOOLCHAIN=local
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+COPY . .
+
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/hello-server .
+
+FROM gcr.io/distroless/static-debian13:nonroot@sha256:25ac8f0c3b2334a9eb05452266bd4697864a8c8ef0ef71e5e6480d7f92868329
+
+COPY --from=builder /out/hello-server /hello-server
+
+USER 65532:65532
+
+EXPOSE 8080
+
+ENTRYPOINT ["/hello-server"]

@@ -1,13 +1,21 @@
 # Validated Debian 13 comparison
 
-This is the selected presentation evidence from the user's VM summary supplied on 3 November 2026. It supersedes the earlier Debian 12 runtime comparison; the full raw scan reports remain on the user's VM at `~/results-debian13`.
+This is the selected presentation evidence from the VM run supplied on 3 November 2026. It supersedes the earlier Debian 12 runtime comparison; the uploaded raw reports are now committed alongside this summary, with JSON files stored as lossless `.json.gz` files.
+
+## Raw-report verification and caveat
+
+The uploaded totals, severities, residual advisory and captured Dockerfiles match the recorded summary. All four application-image reports identify `linux/arm64`; the two standalone base-image reports identify `linux/amd64`. Those auxiliary files are not a platform-matched base comparison, even though their totals match the OS targets of the application scans.
+
+The principal before/after results below come directly from the ARM64 application reports and remain valid. Architecture-specific package names differ between the standalone builder report and the single-stage application report; do not infer identical inventories from equal totals.
+
+The original files are preserved byte-for-byte after decompression. See `../README.md` for the report index and checksum instructions; the collector has been corrected for future runs, not used to replace this historical evidence.
 
 ## Fixed inputs
 
 - **Source baseline:** `42fd9eb228ff400c504dfe985dcee97de323ace7`.
 - **Builder, both layouts and states:** `golang:1.26.10-bookworm@sha256:23ce71337b726608afb1bc00986e630a05034a87a87ea1fc2cd1ae5cf33387eb`.
 - **Multi-stage runtime, both states:** `gcr.io/distroless/static-debian13:nonroot@sha256:25ac8f0c3b2334a9eb05452266bd4697864a8c8ef0ef71e5e6480d7f92868329`.
-- **Compiler/platform:** Go 1.26.10, linux/arm64.
+- **Compiler/platform:** Go 1.26.10, linux/arm64 for the VM/source checks and all four application images; auxiliary standalone base reports are linux/amd64.
 - **Tools:** Trivy 0.76.1; govulncheck v1.9.0; Docker 29.9.2.
 - **Trivy DB:** `2026-11-03T13:13:42.304243913Z`.
 - **Go DB:** `2026-11-02T22:01:43Z`.

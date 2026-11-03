@@ -1,0 +1,2 @@
+# Decompressed working copies; the lossless .json.gz originals are tracked.
+*.json

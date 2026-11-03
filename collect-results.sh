@@ -17,6 +17,12 @@ REPO="${REPO:-$KIT}"
 BASE_COMMIT="42fd9eb228ff400c504dfe985dcee97de323ace7"
 OUT="${OUT:-$REPO/reports/runs/$(date -u +%Y%m%dT%H%M%SZ)}"
 IMAGE_REPO="${IMAGE_REPO:-hello-server-debian13}"
+PLATFORM="${PLATFORM:-$(go env GOOS)/$(go env GOARCH)}"
+case "$PLATFORM" in
+  linux/arm64|linux/amd64) ;;
+  *) echo "Use a supported Linux target: linux/arm64 or linux/amd64" >&2; exit 1 ;;
+esac
+export GOOS="${PLATFORM%/*}" GOARCH="${PLATFORM#*/}"
 WORK="$(mktemp -d)"
 SMOKE_CID=""
 cleanup() {
@@ -42,6 +48,7 @@ echo "== fixed build inputs (same for before and after)"
 echo "builder: ${BUILDER_IMAGE}"
 echo "runtime: ${RUNTIME_IMAGE}"
 echo "images: ${IMAGE_REPO} | reports: ${OUT}"
+echo "platform: ${PLATFORM}"
 cp "${KIT}/Dockerfile.single-stage" "${KIT}/Dockerfile.multi-stage" "${KIT}/.dockerignore" "${OUT}/"
 
 echo "== versions"
@@ -74,7 +81,7 @@ echo "before: $(grep -m1 '^go ' "${WORK}/before/go/go.mod") | after: $(grep -m1 
 echo "== build images"
 for s in before after; do
   for k in single multi; do
-    docker build -q -f "${KIT}/Dockerfile.${k}-stage" -t "${IMAGE_REPO}:${k}-${s}" "${WORK}/${s}/go" >/dev/null
+    docker build --platform "${PLATFORM}" -q -f "${KIT}/Dockerfile.${k}-stage" -t "${IMAGE_REPO}:${k}-${s}" "${WORK}/${s}/go" >/dev/null
     echo "built ${IMAGE_REPO}:${k}-${s}"
   done
 done
@@ -92,15 +99,21 @@ summarise() {
 }
 
 scan_image() {
-  local ref="$1" name="$2"
-  trivy image --skip-db-update --quiet --scanners vuln -f json -o "${OUT}/${name}.json" "${ref}"
+  local ref="$1" name="$2" image_source="${3:-docker}"
+  trivy image --platform "${PLATFORM}" --image-src "${image_source}" --skip-db-update --quiet --scanners vuln -f json -o "${OUT}/${name}.json" "${ref}"
+  jq -e --arg platform "${PLATFORM}" \
+    '(.Metadata.ImageConfig.os + "/" + .Metadata.ImageConfig.architecture) == $platform' \
+    "${OUT}/${name}.json" >/dev/null || {
+      echo "Platform mismatch in ${name}; expected ${PLATFORM}" >&2
+      exit 1
+    }
   echo "${name} (${ref})"
   summarise "${OUT}/${name}.json"
 }
 
 echo "== trivy: base images alone"
-scan_image "${BUILDER_IMAGE}" base-golang
-scan_image "${RUNTIME_IMAGE}" base-distroless
+scan_image "${BUILDER_IMAGE}" base-golang remote
+scan_image "${RUNTIME_IMAGE}" base-distroless remote
 
 echo "== trivy: built images"
 for s in before after; do

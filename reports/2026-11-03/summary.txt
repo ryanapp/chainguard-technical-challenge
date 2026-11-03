@@ -1,0 +1,81 @@
+== fixed build inputs (same for before and after)
+builder: golang:1.26.10-bookworm@sha256:23ce71337b726608afb1bc00986e630a05034a87a87ea1fc2cd1ae5cf33387eb
+runtime: gcr.io/distroless/static-debian13:nonroot@sha256:25ac8f0c3b2334a9eb05452266bd4697864a8c8ef0ef71e5e6480d7f92868329
+images: hello-server-debian13 | reports: /home/ubuntu/results-debian13
+== versions
+go version go1.26.10 linux/arm64
+Scanner: govulncheck@v1.9.0
+DB: https://vuln.go.dev
+DB updated: 2026-11-02 22:01:43 +0000 UTC
+Version: 0.76.1
+docker 29.9.2
+== freeze DBs (one snapshot for every scan below)
+trivy db UpdatedAt: 2026-11-03 13:13:42.304243913 +0000 UTC
+go vuln db {"modified":"2026-11-02T22:01:43Z"}
+== prepare clean before/after sources from 42fd9eb228ff400c504dfe985dcee97de323ace7
+before: go 1.18 | after: go 1.26.10
+== build images
+built hello-server-debian13:single-before
+built hello-server-debian13:multi-before
+built hello-server-debian13:single-after
+built hello-server-debian13:multi-after
+== trivy: base images alone
+base-golang (golang:1.26.10-bookworm@sha256:23ce71337b726608afb1bc00986e630a05034a87a87ea1fc2cd1ae5cf33387eb)
+  total 3186 | fixable 3
+  severity CRITICAL=4 HIGH=255 LOW=1162 MEDIUM=1735 UNKNOWN=30
+  status   affected=2911 fix_deferred=214 fixed=3 will_not_fix=58
+  - os-pkgs/debian golang:1.26.10-bookworm@sha256:23ce71337b726608afb1bc00986e630a05034a87a87ea1fc2cd1ae5cf33387eb (debian 12.15): 3186
+base-distroless (gcr.io/distroless/static-debian13:nonroot@sha256:25ac8f0c3b2334a9eb05452266bd4697864a8c8ef0ef71e5e6480d7f92868329)
+  total 0 | fixable 0
+  severity 
+  status   
+== trivy: built images
+single-before (hello-server-debian13:single-before)
+  total 3250 | fixable 67
+  severity CRITICAL=4 HIGH=287 LOW=1162 MEDIUM=1762 UNKNOWN=35
+  status   affected=2911 fix_deferred=214 fixed=67 will_not_fix=58
+  - lang-pkgs/gobinary hello-server: 64
+  - os-pkgs/debian hello-server-debian13:single-before (debian 12.15): 3186
+multi-before (hello-server-debian13:multi-before)
+  total 64 | fixable 64
+  severity HIGH=32 MEDIUM=27 UNKNOWN=5
+  status   fixed=64
+  - lang-pkgs/gobinary hello-server: 64
+single-after (hello-server-debian13:single-after)
+  total 3187 | fixable 4
+  severity CRITICAL=4 HIGH=255 LOW=1162 MEDIUM=1735 UNKNOWN=31
+  status   affected=2911 fix_deferred=214 fixed=4 will_not_fix=58
+  - lang-pkgs/gobinary hello-server: 1
+  - os-pkgs/debian hello-server-debian13:single-after (debian 12.15): 3186
+multi-after (hello-server-debian13:multi-after)
+  total 1 | fixable 1
+  severity UNKNOWN=1
+  status   fixed=1
+  - lang-pkgs/gobinary hello-server: 1
+== govulncheck (source, go1.26.10)
+before:
+  Your code is affected by 11 vulnerabilities from 1 module.
+  This scan also found 8 vulnerabilities in packages you import and 44
+  vulnerabilities in modules you require, but your code doesn't appear to call
+  these vulnerabilities.
+  Use '-show verbose' for more details.
+after:
+  No vulnerabilities found.
+  Your code is affected by 0 vulnerabilities.
+  This scan also found 0 vulnerabilities in packages you import and 1
+  vulnerability in modules you require, but your code doesn't appear to call these
+  vulnerabilities.
+  Use '-show verbose' for more details.
+== govulncheck before, older compiler (the one-sentence compiler story)
+  Your code is affected by 32 vulnerabilities from 1 module and the Go standard library.
+== old GODEBUG defaults in the shipped binary
+  before: 33
+  after: 0
+== image sizes
+hello-server-debian13:multi-after 17.6MB
+hello-server-debian13:multi-before 17.2MB
+hello-server-debian13:single-after 1.75GB
+hello-server-debian13:single-before 1.6GB
+== functional check
+  multi-after says: Hello World!
+== done. JSON reports in /home/ubuntu/results-debian13

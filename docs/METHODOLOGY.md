@@ -10,6 +10,10 @@ The runtime comparison changes both package inventory and Debian release. The mu
 
 The runtime keeps build-time tooling out of the application image. It does not patch the builder, whose own inventory still needs maintenance.
 
+The uploaded evidence exposed a platform mismatch in the auxiliary base scans: `base-golang.json` and `base-distroless.json` identify AMD64, whereas all four application-image reports identify ARM64. Matching finding totals do not prove identical inventories; architecture-specific package names differ. Use the ARM64 application reports for the main comparison and do not present the standalone base files as platform-matched corroboration.
+
+The original reports are preserved unchanged. The collector now passes an explicit platform to builds and scans, chooses remote versus local image sources explicitly, and checks report architecture; those changes have not been rerun in the original VM.
+
 ## Why this runtime
 
 Debian 13 is a stable release, and Distroless publishes `static-debian13:nonroot` for ARM64, with a Go example using `CGO_ENABLED=0` ([Debian release information](https://www.debian.org/releases/trixie/), [Distroless documentation](https://github.com/GoogleContainerTools/distroless)). Its support policy is separate from Debian's own operating-system lifecycle ([Distroless policy](https://github.com/GoogleContainerTools/distroless/blob/main/SUPPORT_POLICY.md)).
@@ -59,4 +63,4 @@ No controlled Chainguard alternative was measured. Supplier maintenance and supp
 
 Completed in the recorded VM run: four image builds and scans, source reachability checks, dependency remediation, image-size collection and the final standalone HTTP smoke check.
 
-Not completed: comprehensive regression testing, signature or attestation verification, application signing, Kubernetes deployment or publication of an OpenVEX statement. The presentation is shared separately, and complete raw reports remain to be added as described in [the reports checklist](../reports/README.md).
+Not completed: comprehensive regression testing, signature or attestation verification, application signing, Kubernetes deployment or publication of an OpenVEX statement. The presentation is shared separately, and the complete uploaded reports are available with provenance and decompression instructions in [the evidence guide](../reports/README.md).

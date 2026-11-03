@@ -13,7 +13,9 @@ The Linux ARM64 VM run on 3 November 2026 used Go 1.26.10, Trivy 0.76.1 and govu
 
 govulncheck reported 11 reachable findings before and zero after, with one required-module-only finding remaining. The final multi-stage container returned `Hello World!`; that is a smoke check, not comprehensive testing or proof of zero risk.
 
-See the [recorded results and severity breakdown](reports/2026-11-03/summary.md). **The full raw VM reports have not yet been committed:** the repository currently contains the recorded summary, reproduction scripts and an explicit [report checklist](reports/README.md), not a complete raw-report hand-in.
+See the [recorded results and severity breakdown](reports/2026-11-03/summary.md) and the [complete uploaded evidence](reports/README.md). The six raw Trivy JSON files are stored losslessly compressed, alongside both govulncheck reports, the original console summary, captured Dockerfiles and original-file checksums.
+
+**Evidence caveat:** all four application-image reports are ARM64, but the two standalone base-image reports identify AMD64. Their totals match, but they are not a platform-matched base comparison. The core before/after results come directly from the four ARM64 application reports; the current collector explicitly selects and checks the platform for future runs.
 
 ## Repository contents
 
@@ -22,7 +24,7 @@ See the [recorded results and severity breakdown](reports/2026-11-03/summary.md)
 - **Reproduction:** [collect-results.sh](collect-results.sh) rebuilds and scans the four comparison images; [scan.sh](scan.sh) supports individual dependency experiments.
 - **VM setup:** [cg-cloud-init.yaml](cg-cloud-init.yaml) records the pinned tool installation.
 - **Methodology:** [docs/METHODOLOGY.md](docs/METHODOLOGY.md) explains choices, evidence boundaries and the residual assessment.
-- **Reports:** [reports/](reports/) separates the recorded summary from raw evidence still to be supplied.
+- **Reports:** [reports/](reports/) contains the recorded summary, complete uploaded reports and their provenance/architecture caveat.
 
 The presentation is shared separately. Optional signing, SBOM attestation and Kubernetes deployment are not claimed as completed.
 
@@ -70,7 +72,9 @@ Do not use a shallow clone that omits baseline commit `42fd9eb228ff400c504dfe985
 
 Each run downloads current advisory data once and freezes it for that run. Later dates can yield different counts; the original timestamps are recorded with the results. This repository does not bundle historical vulnerability databases.
 
-The collector keeps new runs separate, checks scanner errors and asserts the expected HTTP response. These packaging/error-handling improvements were made after the recorded VM run; no new complete container run is implied.
+The collector defaults to the local Go platform, passes that platform explicitly to Docker and Trivy, and checks each report's image metadata. It scans pinned bases remotely and application images from the local Docker engine, avoiding implicit source/platform selection.
+
+The collector keeps new runs separate, checks scanner errors and asserts the expected HTTP response. These packaging, platform and error-handling improvements were made after the recorded VM run; no new complete container run is implied.
 
 For standalone use of `scan.sh`, first set `GOVULNDB_URL` to a separately retained local Go vulnerability database and download a Trivy database. The collector's temporary Go snapshot is cleaned up at exit; it does not provide a persistent database for later manual experiments.
 

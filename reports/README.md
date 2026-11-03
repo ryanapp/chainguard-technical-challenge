@@ -1,38 +1,51 @@
 # Scan evidence
 
-The [3 November 2026 summary](2026-11-03/summary.md) records the supplied VM results. It is not a substitute for the full raw reports, which have not yet been committed to this repository.
+The `2026-11-03/` directory contains the complete supplied VM report set, including the console summary and captured build inputs. Trivy JSON reports are losslessly compressed to keep the repository smaller; no findings or metadata have been removed.
 
-## Files to add from the recorded VM
+## Report index
 
-Copy the following from `~/results-debian13` into `reports/2026-11-03/` after reviewing their contents for anything that should not be public:
+| File | Scope | Reported platform | Findings |
+|---|---|---|---:|
+| `base-golang.json.gz` | Pinned standalone Go base | linux/amd64 | 3,186 |
+| `base-distroless.json.gz` | Pinned standalone runtime base | linux/amd64 | 0 |
+| `single-before.json.gz` | Baseline single-stage application | linux/arm64 | 3,250 |
+| `multi-before.json.gz` | Baseline multi-stage application | linux/arm64 | 64 |
+| `single-after.json.gz` | Remediated single-stage application | linux/arm64 | 3,187 |
+| `multi-after.json.gz` | Remediated multi-stage application | linux/arm64 | 1 |
+| `govulncheck-before.txt` | Source analysis | VM Go toolchain: linux/arm64 | 11 reachable |
+| `govulncheck-after.txt` | Source analysis | VM Go toolchain: linux/arm64 | 0 reachable; 1 module-only |
 
-```text
-base-golang.json
-base-distroless.json
-single-before.json
-multi-before.json
-single-after.json
-multi-after.json
-govulncheck-before.txt
-govulncheck-after.txt
-summary.txt
-```
+Also included: the original `summary.txt`, both Dockerfiles, `.dockerignore`, the human-readable `summary.md`, and `ORIGINAL_SHA256SUMS`.
 
-The summary should retain tool versions, image references, database timestamps and the functional response. If those are also available as separate metadata files, include them.
+## Architecture caveat
 
-For example, from a checkout in the same VM:
+The four application scans form an ARM64 before/after comparison. The two standalone base reports are AMD64 and must not be described as platform-matched validation of those application images.
+
+Equal totals do not establish identical package inventories. The original collector did not explicitly constrain the platform/source of standalone base scans; the recorded metadata establishes the mismatch, not its complete root cause.
+
+The current collector now sets the target platform, uses remote sources for base scans and local Docker sources for application scans, and validates report metadata. A future rerun should be stored separately rather than overwriting these originals.
+
+## Read and verify the reports
+
+Inspect a report without expanding it permanently:
 
 ```bash
-cp ~/results-debian13/{base-golang,base-distroless,single-before,multi-before,single-after,multi-after}.json reports/2026-11-03/
-cp ~/results-debian13/govulncheck-{before,after}.txt reports/2026-11-03/
-cp ~/results-debian13/summary.txt reports/2026-11-03/
-git status --short reports/
+gzip -dc reports/2026-11-03/multi-after.json.gz | jq .
 ```
 
-Review the staged contents before committing. Do not add credentials, private keys, image tarballs, compiled binaries or vulnerability-database caches.
+To restore all six original JSON files and verify all uploaded files:
+
+```bash
+cd reports/2026-11-03
+gzip -dk -- *.json.gz
+shasum -a 256 -c ORIGINAL_SHA256SUMS
+# Linux alternative: sha256sum -c ORIGINAL_SHA256SUMS
+```
+
+The checksum manifest refers to the original uncompressed filenames. The generated `.json` copies are ignored by Git; the `.json.gz` files remain the committed evidence.
+
+Checksums establish byte integrity, not independent attestation of the VM or scan provenance. The additional authored `summary.md` is not an original uploaded file and is not included in that manifest.
 
 ## New reproductions
 
-`collect-results.sh` defaults to a timestamped directory under `reports/runs/`. That generated directory is ignored by Git until a particular run is intentionally selected and copied into a clearly dated evidence folder.
-
-New runs use new advisory snapshots and may differ from the recorded result. Do not silently replace historical reports with a new run under the same date.
+`collect-results.sh` defaults to a timestamped directory under `reports/runs/`, ignored by Git until a run is intentionally selected. New advisory snapshots may change the counts; do not silently replace historical reports with a new run under the same date.

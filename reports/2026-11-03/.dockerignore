@@ -1,0 +1,14 @@
+# .dockerignore — place in go/ (the build context), next to main.go
+#
+# Exclude everything, then add back only what the build needs. Anything
+# new in this folder (binaries, notes, keys, .env files, backups) stays
+# out of the build unless it's added here on purpose.
+*
+
+# Go module definition and checksums
+!go.mod
+!go.sum
+
+# Go source files, at the top level and in any subfolders
+!*.go
+!**/*.go
